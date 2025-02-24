@@ -269,7 +269,11 @@ function love.draw()
             love.graphics.draw(musicArt, 16, 34, 0, 128/musicArt:getWidth(), 128/musicArt:getHeight())
             love.graphics.setColor(0,0,0)
             love.graphics.printf("Now Playing: ", 16, 8, 320, "left", 0, 2)
+            if string.find(queue[#queue], "/") then
             love.graphics.printf(string.sub(queue[#queue],2+string.len(queue[#queue])-string.find(string.reverse(queue[#queue]), "/"),string.len(queue[#queue])), 152, 32, 68, "left", 0, 2)
+            else
+            love.graphics.printf(queue[#queue], 152, 32, 68, "left", 0, 2)
+            end
             love.graphics.printf(math.floor(audioSource:tell("seconds")/60)..":"..string.sub("00000000000",0,2-string.len(math.floor(audioSource:tell("seconds")%60)))..math.floor(audioSource:tell("seconds")%60).."/"..math.floor(audioSource:getDuration("seconds")/60)..":"..string.sub("00000000000",0,2-string.len(math.floor(audioSource:getDuration("seconds")%60)))..math.floor(audioSource:getDuration("seconds")%60), 152, 152, 64, "left", 0, 2)
             love.graphics.rectangle("fill",8,170,304,18)
             love.graphics.setColor(0,0,1)
