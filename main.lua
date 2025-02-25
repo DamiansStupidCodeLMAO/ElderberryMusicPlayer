@@ -179,7 +179,7 @@ function love.keypressed(key, code, isrepeat)
                 end
             end
         end
-    else
+    elseif not IsEmptyFolder then
         if key == "up" and not isrepeat and navigation[1]-1~=0 then
             navigation[1] = navigation[1] - 1
         elseif key == "down" and not isrepeat and navigation[1]+1 <= 2 then
@@ -294,44 +294,51 @@ function love.draw()
             end
             if queueMode then
                 for k, file in ipairs(queue) do
-                    if k == highlightedfile then
-                        love.graphics.setColor(0,0,1)
-                        love.graphics.rectangle("fill", 0,((k-1)*20)+10,320,18)
-                        love.graphics.setColor(0.8,0.8,1)
-                        love.graphics.rectangle("fill", 0,((k-1)*20)+10,18,18)
-                        love.graphics.setColor(0,0,1)
-                        love.graphics.draw(delete, 0, ((k-1)*20)+11)
-                        love.graphics.setColor(0.8,0.8,1)
+                    koffset = math.whole(highlightedfile-5)
+                    if highlightedfile > 5 and highlightedfile >= k+5 then
+                        goto skip_render_queuemode
                     else
-                        love.graphics.setColor(0,0,0)
+                        if k == highlightedfile then
+                            love.graphics.setColor(0,0,1)
+                            love.graphics.rectangle("fill", 0,(((k-koffset)-1)*20)+10,320,18)
+                            love.graphics.setColor(0.8,0.8,1)
+                            love.graphics.rectangle("fill", 0,(((k-koffset)-1)*20)+10,18,18)
+                            love.graphics.setColor(0,0,1)
+                            love.graphics.draw(delete, 0, (((k-koffset)-1)*20)+11)
+                            love.graphics.setColor(0.8,0.8,1)
+                        else
+                            love.graphics.setColor(0,0,0)
+                        end
+                        --print(k .. ". " .. file) --outputs something like "1. main.lua"
+                        love.graphics.printf(file, -480, (((k-koffset)-1)*20)+12, 640, "center", 0, 2)
                     end
-                    print(k .. ". " .. file) --outputs something like "1. main.lua"
-                    love.graphics.printf(file, -480, ((k-1)*20)+12, 640, "center", 0, 2)
+                    ::skip_render_queuemode::
                 end
 
             else
                 for k, file in ipairs(music) do
+                    koffset = math.whole(highlightedfile-5)
                     if k == highlightedfile then
                     love.graphics.setColor(0,0,1)
-                    love.graphics.rectangle("fill", 0,((k-1)*20)+10,320,18)
+                    love.graphics.rectangle("fill", 0,(((k-koffset)-1)*20)+10,320,18)
                         if love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type ~= "directory" then
                             love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==1))),0+(0.8*(bool2int(highlightedopt==1))),1)
-                            love.graphics.rectangle("fill", 0,((k-1)*20)+10,18,18)
+                            love.graphics.rectangle("fill", 0,(((k-koffset)-1)*20)+10,18,18)
                             love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==1))),0.8-(0.8*(bool2int(highlightedopt==1))),1)
-                            love.graphics.polygon("fill",4,((k-1)*20)+14,4,((k-1)*20)+24,14,((k-1)*20)+19)
+                            love.graphics.polygon("fill",4,(((k-koffset)-1)*20)+14,4,(((k-koffset)-1)*20)+24,14,(((k-koffset)-1)*20)+19)
                             love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==2))),0+(0.8*(bool2int(highlightedopt==2))),1)
-                            love.graphics.rectangle("fill", 18,((k-1)*20)+10,18,18)
+                            love.graphics.rectangle("fill", 18,(((k-koffset)-1)*20)+10,18,18)
                             love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==2))),0.8-(0.8*(bool2int(highlightedopt==2))),1)
-                            love.graphics.rectangle("line", 20,((k-1)*20)+15,14,0)
-                            love.graphics.rectangle("line", 20,((k-1)*20)+19,14,0)
-                            love.graphics.rectangle("line", 20,((k-1)*20)+23,14,0)
+                            love.graphics.rectangle("line", 20,(((k-koffset)-1)*20)+15,14,0)
+                            love.graphics.rectangle("line", 20,(((k-koffset)-1)*20)+19,14,0)
+                            love.graphics.rectangle("line", 20,(((k-koffset)-1)*20)+23,14,0)
                         end
                         love.graphics.setColor(0.8,0.8,1)
                         else
                         love.graphics.setColor(0,0,0)
                     end
                     --print(k .. ". " .. file) --outputs something like "1. main.lua"
-                    love.graphics.printf(file, -480, ((k-1)*20)+12, 640, "center", 0, 2)
+                    love.graphics.printf(file, -480, (((k-koffset)-1)*20)+12, 640, "center", 0, 2)
                 end
             end
         else
