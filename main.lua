@@ -15,7 +15,7 @@ function love.load()
     bg = love.graphics.newImage("assets/UI/Background.png")
     art = love.graphics.newImage("assets/UI/MusicArt.png")
     nav = love.graphics.newImage("assets/UI/playbackButtons.png")
-    navlight = love.graphics.newImage("assets/UI/playbackButtonsHighlighted.png")
+    --navlight = love.graphics.newImage("assets/UI/playbackButtonsHighlighted.png") unused
     rewind = love.graphics.newQuad(0,0,62,18,143,36)
     pause = love.graphics.newQuad(62,0,19,18,143,36)
     fastforward = love.graphics.newQuad(81,0,62,18,143,36)
@@ -42,6 +42,7 @@ function love.load()
             end
         end
     end
+    files = nil
     if #music == 0 then
         print("empty ahh")
         IsEmptyFolder = true
@@ -94,7 +95,8 @@ function love.keypressed(key, code, isrepeat)
                         appendDir = string.sub(riDdneppa, hey_wheres_the_parent):reverse()
                         print(appendDir)
                     end
-                    print(appendDir)files = love.filesystem.getDirectoryItems("music/"..appendDir)
+                    print(appendDir)
+                    files = love.filesystem.getDirectoryItems("music/"..appendDir)
                     formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
                     music = {}
                     if appendDir ~= "" then
@@ -114,6 +116,7 @@ function love.keypressed(key, code, isrepeat)
                         end
                     end
                     highlightedfile = 1
+                    files = nil
                 elseif love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type == "directory" then
                     if appendDir ~= "" then
                         appendDir = appendDir..music[highlightedfile].."/"
@@ -140,6 +143,7 @@ function love.keypressed(key, code, isrepeat)
                         end
                     end
                     highlightedfile = 1
+                    files = nil
                 else
                     queue[#queue+1] = appendDir..music[highlightedfile]
                     if love.filesystem.getInfo("music/"..queue[#queue]..".png") then
@@ -209,6 +213,7 @@ end
 
 function love.update(dt)
     if IsPlaying and not audioSource:isPlaying() and not isPaused then
+        audioSource:release()
         print(queue[#queue])
         if #queue > 0 then
                 queue[#queue] = nil
@@ -292,7 +297,11 @@ function love.draw()
             love.graphics.draw(nav, skip, 242, 158-28)
             love.graphics.setColor(0,1,1)
             if queue[#queue-1] ~= nil then
-                love.graphics.printf("Up Next: "..string.sub(queue[#queue-1],2+string.len(queue[#queue-1])-string.find(string.reverse(queue[#queue-1]), "/"),string.len(queue[#queue-1])), 16, 192, 160, "left", 0, 2)
+                if string.find(queue[#queue], "/") then
+                    love.graphics.printf("Up next:"..string.sub(queue[#queue-1],2+string.len(queue[#queue-1])-string.find(string.reverse(queue[#queue-1]), "/"),string.len(queue[#queue])), 16, 192, 152, "left", 0, 2)
+                else
+                    love.graphics.printf("Up next:"..queue[#queue-1], 16, 192, 152, "left", 0, 2)
+                end
             end
         end
     push:finish()
