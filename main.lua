@@ -15,6 +15,7 @@ function love.load()
     bg = love.graphics.newImage("assets/UI/Background.png")
     art = love.graphics.newImage("assets/UI/MusicArt.png")
     nav = love.graphics.newImage("assets/UI/playbackButtons.png")
+    delete = love.graphics.newImage("assets/UI/delete.png")
     --navlight = love.graphics.newImage("assets/UI/playbackButtonsHighlighted.png") unused
     rewind = love.graphics.newQuad(0,0,62,18,143,36)
     pause = love.graphics.newQuad(62,0,19,18,143,36)
@@ -52,6 +53,7 @@ function love.load()
     IsPlaying = false
     appendDir = ""
     queue = {}
+    queueMode = false
     navigation = {1,1}
     isPaused = false
 end
@@ -70,92 +72,110 @@ end
 
 function love.keypressed(key, code, isrepeat)
     if not (IsEmptyFolder or IsPlaying) then
-        if key == "up" and not isrepeat and highlightedfile-1~=0 then
+        if key == "up" and not isrepeat and highlightedfile-1>=0 then
             highlightedfile = highlightedfile-1
-        elseif key == "down" and not isrepeat and highlightedfile+1 <= #music then
-            highlightedfile = highlightedfile+1
+        elseif key == "down" and not isrepeat then --and highlightedfile+1 <= #music then
+            if queueMode and highlightedfile+1 <= #queue then
+                highlightedfile = highlightedfile+1
+            elseif not queueMode and highlightedfile+1 <= #music then
+                highlightedfile = highlightedfile+1
+            end
         elseif key == "left" and not isrepeat and highlightedopt-1 >= 1 then
             highlightedopt = highlightedopt - 1
         elseif key == "right" and not isrepeat and highlightedopt+1 <= 2 then
             highlightedopt = highlightedopt + 1
         end
-        if key == "return" then
-            if highlightedopt == 2 and love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type ~= "directory" then
-                queue[#queue+1] = appendDir..music[highlightedfile]
-                print(queue[#queue+1])
-            else
-                if music[highlightedfile] == ".." then
-                    riDdneppa = appendDir:reverse()
-                    print(riDdneppa)
-                    hey_wheres_the_parent = string.find(riDdneppa, "/", 2)
-                    print(hey_wheres_the_parent)
-                    if hey_wheres_the_parent == nil then
-                        appendDir = ""
-                    else
-                        appendDir = string.sub(riDdneppa, hey_wheres_the_parent):reverse()
-                        print(appendDir)
-                    end
-                    print(appendDir)
-                    files = love.filesystem.getDirectoryItems("music/"..appendDir)
-                    formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
-                    music = {}
-                    if appendDir ~= "" then
-                        music[#music+1] = ".."
-                    end
-                    for k, file in ipairs(files) do
-                        print(k .. ". " .. file) --outputs something like "1. main.lua"
-                        infoTable = love.filesystem.getInfo("music/"..appendDir..file)
-                        print(infoTable.type)
-                        if infoTable.type == "directory" then
-                            music[#music+1] = file
-                        end
-                        for i, format in ipairs(formats) do
-                            if file:endswith(format) then
-                                music[#music+1] = file
-                            end
-                        end
-                    end
-                    highlightedfile = 1
-                    files = nil
-                elseif love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type == "directory" then
-                    if appendDir ~= "" then
-                        appendDir = appendDir..music[highlightedfile].."/"
-                    else
-                        appendDir = music[highlightedfile].."/"
-                    end
-                    files = love.filesystem.getDirectoryItems("music/"..appendDir)
-                    formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
-                    music = {}
-                    if appendDir ~= "" then
-                        music[#music+1] = ".."
-                    end
-                    for k, file in ipairs(files) do
-                        print(k .. ". queue[#queue] = nil" .. file) --outputs something like "1. main.lua"
-                        infoTable = love.filesystem.getInfo("music/"..appendDir..file)
-                        print(infoTable.type)
-                        if infoTable.type == "directory" then
-                            music[#music+1] = file
-                        end
-                        for i, format in ipairs(formats) do
-                            if file:endswith(format) then
-                                music[#music+1] = file
-                            end
-                        end
-                    end
-                    highlightedfile = 1
-                    files = nil
+        if key == "return" and not isrepeat then
+            if queueMode and highlightedfile~=0 then
+                table.remove(queue, highlightedfile)
+                if highlightedfile > #queue then
+                        highlightedfile = #queue
+                end
+                return
+            end
+            if highlightedfile == 0 then
+                if highlightedopt == 2 then
+                    love.event.quit()
                 else
+                    queueMode = not queueMode
+                end
+            else
+                if highlightedopt == 2 and love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type ~= "directory" then
                     queue[#queue+1] = appendDir..music[highlightedfile]
-                    if love.filesystem.getInfo("music/"..queue[#queue]..".png") then
-                        musicArt = love.graphics.newImage("music/"..queue[#queue]..".png")
+                else
+                    if music[highlightedfile] == ".." then
+                        riDdneppa = appendDir:reverse()
+                        print(riDdneppa)
+                        hey_wheres_the_parent = string.find(riDdneppa, "/", 2)
+                        print(hey_wheres_the_parent)
+                        if hey_wheres_the_parent == nil then
+                            appendDir = ""
+                        else
+                            appendDir = string.sub(riDdneppa, hey_wheres_the_parent):reverse()
+                            print(appendDir)
+                        end
+                        print(appendDir)
+                        files = love.filesystem.getDirectoryItems("music/"..appendDir)
+                        formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
+                        music = {}
+                        if appendDir ~= "" then
+                            music[#music+1] = ".."
+                        end
+                        for k, file in ipairs(files) do
+                            print(k .. ". " .. file) --outputs something like "1. main.lua"
+                            infoTable = love.filesystem.getInfo("music/"..appendDir..file)
+                            print(infoTable.type)
+                            if infoTable.type == "directory" then
+                                music[#music+1] = file
+                            end
+                            for i, format in ipairs(formats) do
+                                if file:endswith(format) then
+                                    music[#music+1] = file
+                                end
+                            end
+                        end
+                        highlightedfile = 1
+                        files = nil
+                    elseif love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type == "directory" then
+                        if appendDir ~= "" then
+                            appendDir = appendDir..music[highlightedfile].."/"
+                        else
+                            appendDir = music[highlightedfile].."/"
+                        end
+                        files = love.filesystem.getDirectoryItems("music/"..appendDir)
+                        formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
+                        music = {}
+                        if appendDir ~= "" then
+                            music[#music+1] = ".."
+                        end
+                        for k, file in ipairs(files) do
+                            print(k .. ". queue[#queue] = nil" .. file) --outputs something like "1. main.lua"
+                            infoTable = love.filesystem.getInfo("music/"..appendDir..file)
+                            print(infoTable.type)
+                            if infoTable.type == "directory" then
+                                music[#music+1] = file
+                            end
+                            for i, format in ipairs(formats) do
+                                if file:endswith(format) then
+                                    music[#music+1] = file
+                                end
+                            end
+                        end
+                        highlightedfile = 1
+                        files = nil
                     else
-                        musicArt = art
+                        queue[#queue+1] = appendDir..music[highlightedfile]
+                        if love.filesystem.getInfo("music/"..queue[#queue]..".png") then
+                            musicArt = love.graphics.newImage("music/"..queue[#queue]..".png")
+                        else
+                            musicArt = art
+                        end
+                        -- data, err = love.filesystem.newFileData("music/"..appendDir..music[highlightedfile])) old method of getting data.
+                        print(err)
+                        audioSource = love.audio.newSource(love.sound.newSoundData("music/"..queue[#queue]), "stream")
+                        audioSource:play()
+                        IsPlaying = true
                     end
-                    -- data, err = love.filesystem.newFileData("music/"..appendDir..music[highlightedfile])) old method of getting data.
-                    print(err)
-                    audioSource = love.audio.newSource(love.sound.newSoundData("music/"..queue[#queue]), "stream")
-                    audioSource:play()
-                    IsPlaying = true
                 end
             end
         end
@@ -216,7 +236,7 @@ function love.update(dt)
         audioSource:release()
         print(queue[#queue])
         if #queue > 0 then
-                queue[#queue] = nil
+                table.remove(queue, #queue)
                 if #queue <= 0 then
                     IsPlaying = false
                 else
@@ -244,28 +264,75 @@ function love.draw()
         if IsEmptyFolder then
             love.graphics.printf("Hey there! Seems like you're missing music to play. Add some music to "..love.filesystem.getSaveDirectory().."/music and try again!", 0, 88, 160, "center", 0, 2)
         elseif not IsPlaying then
-            for k, file in ipairs(music) do
-                if k == highlightedfile then
-                  love.graphics.setColor(0,0,1)
-                  love.graphics.rectangle("fill", 0,((k-1)*20)+10,320,18)
-                    if love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type ~= "directory" then
-                        love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==1))),0+(0.8*(bool2int(highlightedopt==1))),1)
+            if not queueMode then
+                love.graphics.print("music/"..appendDir,0,1)
+            else
+                love.graphics.print("Queue ("..#queue..")",0,1)
+            end
+            if highlightedfile == 0 then
+                love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==1))),0+(0.8*(bool2int(highlightedopt==1))),1)
+                love.graphics.rectangle("fill", 284,0,18,8)
+                love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==1))),0.8-(0.8*(bool2int(highlightedopt==1))),1)
+                love.graphics.rectangle("fill", 287,1,12,1)
+                love.graphics.rectangle("fill", 287,3,12,1)
+                love.graphics.rectangle("fill", 287,5,12,1)
+                love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==2))),0+(0.8*(bool2int(highlightedopt==2))),1)
+                love.graphics.rectangle("fill", 302,0,18,8)
+                love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==2))),0.8-(0.8*(bool2int(highlightedopt==2))),1)
+                love.graphics.print("x", 309)
+            else
+                love.graphics.setColor(0,0,1)
+                love.graphics.rectangle("fill", 284,0,18,8)
+                love.graphics.setColor(0.8,0.8,1)
+                love.graphics.rectangle("fill", 287,1,12,1)
+                love.graphics.rectangle("fill", 287,3,12,1)
+                love.graphics.rectangle("fill", 287,5,12,1)
+                love.graphics.setColor(0,0,1)
+                love.graphics.rectangle("fill", 302,0,18,8)
+                love.graphics.setColor(0.8,0.8,1)
+                love.graphics.print("x", 309)
+            end
+            if queueMode then
+                for k, file in ipairs(queue) do
+                    if k == highlightedfile then
+                        love.graphics.setColor(0,0,1)
+                        love.graphics.rectangle("fill", 0,((k-1)*20)+10,320,18)
+                        love.graphics.setColor(0.8,0.8,1)
                         love.graphics.rectangle("fill", 0,((k-1)*20)+10,18,18)
-                        love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==1))),0.8-(0.8*(bool2int(highlightedopt==1))),1)
-                        love.graphics.polygon("fill",4,((k-1)*20)+14,4,((k-1)*20)+24,14,((k-1)*20)+19)
-                        love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==2))),0+(0.8*(bool2int(highlightedopt==2))),1)
-                        love.graphics.rectangle("fill", 18,((k-1)*20)+10,18,18)
-                        love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==2))),0.8-(0.8*(bool2int(highlightedopt==2))),1)
-                        love.graphics.rectangle("line", 20,((k-1)*20)+15,14,0)
-                        love.graphics.rectangle("line", 20,((k-1)*20)+19,14,0)
-                        love.graphics.rectangle("line", 20,((k-1)*20)+23,14,0)
-                    end
-                    love.graphics.setColor(0.8,0.8,1)
+                        love.graphics.setColor(0,0,1)
+                        love.graphics.draw(delete, 0, ((k-1)*20)+11)
+                        love.graphics.setColor(0.8,0.8,1)
                     else
-                    love.graphics.setColor(0,0,0)
+                        love.graphics.setColor(0,0,0)
+                    end
+                    print(k .. ". " .. file) --outputs something like "1. main.lua"
+                    love.graphics.printf(file, -480, ((k-1)*20)+12, 640, "center", 0, 2)
                 end
-                --print(k .. ". " .. file) --outputs something like "1. main.lua"
-                love.graphics.printf(file, -480, ((k-1)*20)+12, 640, "center", 0, 2)
+
+            else
+                for k, file in ipairs(music) do
+                    if k == highlightedfile then
+                    love.graphics.setColor(0,0,1)
+                    love.graphics.rectangle("fill", 0,((k-1)*20)+10,320,18)
+                        if love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type ~= "directory" then
+                            love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==1))),0+(0.8*(bool2int(highlightedopt==1))),1)
+                            love.graphics.rectangle("fill", 0,((k-1)*20)+10,18,18)
+                            love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==1))),0.8-(0.8*(bool2int(highlightedopt==1))),1)
+                            love.graphics.polygon("fill",4,((k-1)*20)+14,4,((k-1)*20)+24,14,((k-1)*20)+19)
+                            love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==2))),0+(0.8*(bool2int(highlightedopt==2))),1)
+                            love.graphics.rectangle("fill", 18,((k-1)*20)+10,18,18)
+                            love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==2))),0.8-(0.8*(bool2int(highlightedopt==2))),1)
+                            love.graphics.rectangle("line", 20,((k-1)*20)+15,14,0)
+                            love.graphics.rectangle("line", 20,((k-1)*20)+19,14,0)
+                            love.graphics.rectangle("line", 20,((k-1)*20)+23,14,0)
+                        end
+                        love.graphics.setColor(0.8,0.8,1)
+                        else
+                        love.graphics.setColor(0,0,0)
+                    end
+                    --print(k .. ". " .. file) --outputs something like "1. main.lua"
+                    love.graphics.printf(file, -480, ((k-1)*20)+12, 640, "center", 0, 2)
+                end
             end
         else
             love.graphics.setColor(0,0,0)
