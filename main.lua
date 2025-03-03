@@ -3,6 +3,11 @@ function string:endswith(ending)
     return ending == "" or self:sub(-#ending) == ending
 end
 
+function fileExtension(path)
+    local lastdotpos = (path:reverse()):find("%.")
+    return (lastdotpos)
+end
+
 function love.load()
     push = require "./libs/push"
     fullscreentypevar = "desktop"
@@ -256,6 +261,8 @@ function love.update(dt)
     end
 end
 
+
+
 function love.draw()
     push:start()
         love.graphics.setColor(1,1,1)
@@ -349,9 +356,9 @@ function love.draw()
             love.graphics.setColor(0,0,0)
             love.graphics.printf("Now Playing: ", 16, 8, 320, "left", 0, 2)
             if string.find(queue[#queue], "/") then
-            love.graphics.printf(string.sub(queue[#queue],2+string.len(queue[#queue])-string.find(string.reverse(queue[#queue]), "/"),string.len(queue[#queue])), 152, 32, 68, "left", 0, 2)
+            love.graphics.printf(string.sub(queue[#queue],2+string.len(queue[#queue])-string.find(string.reverse(queue[#queue]), "/"),string.len(queue[#queue])-fileExtension(queue[#queue])), 152, 32, 68, "left", 0, 2)
             else
-            love.graphics.printf(queue[#queue], 152, 32, 68, "left", 0, 2)
+            love.graphics.printf(string.sub(queue[#queue],0,string.len(queue[#queue])-fileExtension(queue[#queue])), 152, 32, 68, "left", 0, 2)
             end
             love.graphics.printf(math.floor(audioSource:tell("seconds")/60)..":"..string.sub("00000000000",0,2-string.len(math.floor(audioSource:tell("seconds")%60)))..math.floor(audioSource:tell("seconds")%60).."/"..math.floor(audioSource:getDuration("seconds")/60)..":"..string.sub("00000000000",0,2-string.len(math.floor(audioSource:getDuration("seconds")%60)))..math.floor(audioSource:getDuration("seconds")%60), 152, 152, 64, "left", 0, 2)
             love.graphics.rectangle("fill",8,170,304,18)
@@ -370,11 +377,12 @@ function love.draw()
             love.graphics.setColor(1-(bool2int(navigation[1]==2 and navigation[2]==3)),1,1)
             love.graphics.draw(nav, skip, 242, 158-28)
             love.graphics.setColor(0,1,1)
+
             if queue[#queue-1] ~= nil then
-                if string.find(queue[#queue], "/") then
-                    love.graphics.printf("Up next:"..string.sub(queue[#queue-1],2+string.len(queue[#queue-1])-string.find(string.reverse(queue[#queue-1]), "/"),string.len(queue[#queue])), 16, 192, 152, "left", 0, 2)
+                if string.find(queue[#queue-1], "/") then
+                    love.graphics.printf("Up next:"..string.sub(queue[#queue-1],2+string.len(queue[#queue-1])-string.find(string.reverse(queue[#queue-1]), "/"),string.len(queue[#queue-1])-fileExtension(queue[#queue-1])), 16, 192, 152, "left", 0, 2)
                 else
-                    love.graphics.printf("Up next:"..queue[#queue-1], 16, 192, 152, "left", 0, 2)
+                    love.graphics.printf("Up next:"..string.sub(queue[#queue-1],0,string.len(queue[#queue-1])-fileExtension(queue[#queue-1])), 16, 192, 152, "left", 0, 2)
                 end
             end
         end
