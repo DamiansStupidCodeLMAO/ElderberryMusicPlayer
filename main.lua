@@ -10,9 +10,10 @@ end
 
 function love.load()
     push = require "./libs/push"
+    require "./libs/TSerial"
     fullscreentypevar = "desktop"
     love.window.setMode(320, 240, {resizable = true, fullscreen = true, fullscreentype = fullscreentypevar})
-    push.setupScreen(320, 240, {upscale = "pixel-perfect"})
+    --push.setupScreen(320, 240, {upscale = "pixel-perfect"})
     love.graphics.setDefaultFilter("linear", "nearest")
     font = love.graphics.newImageFont("assets/font/Damienne8.png", " AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890!?.,:;\"\'()[]<>/\\|~`@#$%^&*-_+=↑→↓←", 1)
     font:setLineHeight(1.25)
@@ -21,6 +22,7 @@ function love.load()
     art = love.graphics.newImage("assets/UI/MusicArt.png")
     nav = love.graphics.newImage("assets/UI/playbackButtons.png")
     delete = love.graphics.newImage("assets/UI/delete.png")
+    settings = love.graphics.newImage("assets/UI/settings.png")
     --navlight = love.graphics.newImage("assets/UI/playbackButtonsHighlighted.png") unused
     rewind = love.graphics.newQuad(0,0,62,18,143,36)
     pause = love.graphics.newQuad(62,0,19,18,143,36)
@@ -61,6 +63,17 @@ function love.load()
     queueMode = false
     navigation = {1,1}
     isPaused = false
+    settingsOpen = false
+    settingsTable = {"Use Integer Scaling: "}
+    settingsTableRaw = TSerial.unpack(love.filesystem.read("settings")) or {true}
+    if love.filesystem.getInfo("settings") == nil then
+        love.filesystem.write("settings", TSerial.pack(settingsTableRaw))
+    end
+    if settingsTableRaw[1] then
+        push.setupScreen(320, 240, {upscale = "pixel-perfect"})
+    else
+        push.setupScreen(320, 240, {upscale = "normal"})
+    end
 end
 
 function bool2int(bool)
@@ -76,21 +89,65 @@ function math.whole(n)
 end
 
 function love.keypressed(key, code, isrepeat)
+    if key == "escape" then
+        queueMode = false
+        settingsOpen = false
+        appendDir = ""
+        files = love.filesystem.getDirectoryItems("music/"..appendDir)
+        formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
+        music = {}
+        if appendDir ~= "" then
+            music[#music+1] = ".."
+        end
+        for k, file in ipairs(files) do
+            print(k .. ". " .. file) --outputs something like "1. main.lua"
+            infoTable = love.filesystem.getInfo("music/"..appendDir..file)
+            print(infoTable.type)
+            if infoTable.type == "directory" then
+                music[#music+1] = file
+            end
+            for i, format in ipairs(formats) do
+                if file:endswith(format) then
+                    music[#music+1] = file
+                end
+            end
+        end
+        highlightedfile = 1
+        files = nil
+    end
     if not (IsEmptyFolder or IsPlaying) then
         if key == "up" and not isrepeat and highlightedfile-1>=0 then
             highlightedfile = highlightedfile-1
         elseif key == "down" and not isrepeat then --and highlightedfile+1 <= #music then
+            if highlightedopt == 0 then
+                highlightedopt = 1
+            end
             if queueMode and highlightedfile+1 <= #queue then
                 highlightedfile = highlightedfile+1
             elseif not queueMode and highlightedfile+1 <= #music then
                 highlightedfile = highlightedfile+1
             end
-        elseif key == "left" and not isrepeat and highlightedopt-1 >= 1 then
-            highlightedopt = highlightedopt - 1
+        elseif key == "left" and not isrepeat and highlightedopt-1 >= 0 then
+            if highlightedfile == 0 and highlightedopt-1 == 0 then
+                highlightedopt = highlightedopt - 1
+            elseif highlightedopt-1 ~= 0 then
+                highlightedopt = highlightedopt - 1
+            end
         elseif key == "right" and not isrepeat and highlightedopt+1 <= 2 then
             highlightedopt = highlightedopt + 1
         end
         if key == "return" and not isrepeat then
+            if settingsOpen and highlightedfile~=0 then
+                if highlightedfile == 1 then
+                    settingsTableRaw[highlightedfile] = not settingsTableRaw[highlightedfile]
+                    if settingsTableRaw[1] then
+                        push.setupScreen(320, 240, {upscale = "pixel-perfect"})
+                    else
+                        push.setupScreen(320, 240, {upscale = "normal"})
+                    end
+                end
+                return
+            end
             if queueMode and highlightedfile~=0 then
                 table.remove(queue, highlightedfile)
                 if highlightedfile > #queue then
@@ -101,8 +158,12 @@ function love.keypressed(key, code, isrepeat)
             if highlightedfile == 0 then
                 if highlightedopt == 2 then
                     love.event.quit()
-                else
+                elseif highlightedopt == 1 then
                     queueMode = not queueMode
+                    settingsOpen = false
+                else
+                    settingsOpen = not settingsOpen
+                    queueMode = false
                 end
             else
                 if highlightedopt == 2 and love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type ~= "directory" then
@@ -221,6 +282,8 @@ function love.keypressed(key, code, isrepeat)
                 end
             end
         end
+    else
+        love.event.quit()
     end
     if not isrepeat and key == "f11" then
         love.window.setFullscreen(not love.window.getFullscreen())
@@ -234,6 +297,11 @@ end
 
 function love.resize(width, height)
 	push.resize(width, height)
+end
+
+function love.quit()
+    saveSettings = TSerial.pack(settingsTableRaw)
+    love.filesystem.write("settings", TSerial.pack(settingsTableRaw))
 end
 
 function love.update(dt)
@@ -269,14 +337,20 @@ function love.draw()
         love.graphics.draw(bg, 0,0)
         love.graphics.setColor(0,0,0)
         if IsEmptyFolder then
-            love.graphics.printf("Hey there! Seems like you're missing music to play. Add some music to "..love.filesystem.getSaveDirectory().."/music and try again!", 0, 88, 160, "center", 0, 2)
+            love.graphics.printf("Hey there! Seems like you're missing music to play. Add some music to "..love.filesystem.getSaveDirectory().."/music and try again!\nPress any key to quit.", 0, 72, 160, "center", 0, 2)
         elseif not IsPlaying then
-            if not queueMode then
-                love.graphics.print("music/"..appendDir,0,1)
+            if not queueMode and not settingsOpen then
+                love.graphics.print("music/"..appendDir,1,1)
+            elseif settingsOpen then
+                love.graphics.print("Settings",1,1)
             else
-                love.graphics.print("Queue ("..#queue..")",0,1)
+                love.graphics.print("Queue ("..#queue..")",1,1)
             end
             if highlightedfile == 0 then
+                love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==0))),0+(0.8*(bool2int(highlightedopt==0))),1)
+                love.graphics.rectangle("fill", 269,0,18,8)
+                love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==0))),0.8-(0.8*(bool2int(highlightedopt==0))),1)
+                love.graphics.draw(settings, 272, 0)
                 love.graphics.setColor(0+(0.8*(bool2int(highlightedopt==1))),0+(0.8*(bool2int(highlightedopt==1))),1)
                 love.graphics.rectangle("fill", 284,0,18,8)
                 love.graphics.setColor(0.8-(0.8*(bool2int(highlightedopt==1))),0.8-(0.8*(bool2int(highlightedopt==1))),1)
@@ -289,6 +363,10 @@ function love.draw()
                 love.graphics.print("x", 309)
             else
                 love.graphics.setColor(0,0,1)
+                love.graphics.rectangle("fill", 269,0,18,8)
+                love.graphics.setColor(0.8,0.8,1)
+                love.graphics.draw(settings, 272, 0)
+                love.graphics.setColor(0,0,1)
                 love.graphics.rectangle("fill", 284,0,18,8)
                 love.graphics.setColor(0.8,0.8,1)
                 love.graphics.rectangle("fill", 287,1,12,1)
@@ -299,7 +377,25 @@ function love.draw()
                 love.graphics.setColor(0.8,0.8,1)
                 love.graphics.print("x", 309)
             end
-            if queueMode then
+            if settingsOpen then
+            for k, file in ipairs(settingsTable) do
+                    koffset = math.whole(highlightedfile-5)
+                    if highlightedfile > 5 and highlightedfile >= k+5 then
+                        goto skip_render_settings
+                    else
+                        if k == highlightedfile then
+                            love.graphics.setColor(0,0,1)
+                            love.graphics.rectangle("fill", 0,(((k-koffset)-1)*20)+10,320,18)
+                            love.graphics.setColor(0.8,0.8,1)
+                        else
+                            love.graphics.setColor(0,0,0)
+                        end
+                        --print(k .. ". " .. file) --outputs something like "1. main.lua"
+                        love.graphics.printf(file..tostring(settingsTableRaw[k]), -480, (((k-koffset)-1)*20)+12, 640, "center", 0, 2)
+                    end
+                    ::skip_render_settings::
+                end
+            elseif queueMode then
                 for k, file in ipairs(queue) do
                     koffset = math.whole(highlightedfile-5)
                     if highlightedfile > 5 and highlightedfile >= k+5 then
