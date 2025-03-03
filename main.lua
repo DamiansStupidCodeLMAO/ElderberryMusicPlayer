@@ -8,6 +8,30 @@ function fileExtension(path)
     return (lastdotpos)
 end
 
+function readList()
+files = love.filesystem.getDirectoryItems("music/"..appendDir)
+    formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
+    music = {}
+    if appendDir ~= "" then
+        music[#music+1] = ".."
+    end
+    for k, file in ipairs(files) do
+        print(k .. ". " .. file) --outputs something like "1. main.lua"
+        infoTable = love.filesystem.getInfo("music/"..appendDir..file)
+        print(infoTable.type)
+        if infoTable.type == "directory" then
+            music[#music+1] = file
+        end
+        for i, format in ipairs(formats) do
+            if file:endswith(format) then
+                music[#music+1] = file
+            end
+        end
+    end
+    highlightedfile = 1
+    files = nil
+end
+
 function love.load()
     push = require "./libs/push"
     require "./libs/TSerial"
@@ -30,35 +54,10 @@ function love.load()
     restart = love.graphics.newQuad(0,18,62,18,143,36)
     stop = love.graphics.newQuad(62,18,19,18,143,36)
     skip = love.graphics.newQuad(81,18,62,18,143,36)
-    if not love.filesystem.getInfo("music", "directory") then
-        print("No music directory found, creating..")
-        love.filesystem.createDirectory("music")
-    end
-    files = love.filesystem.getDirectoryItems("music")
-    formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
-    music = {}
-    for k, file in ipairs(files) do
-        print(k .. ". " .. file) --outputs something like "1. main.lua"
-        infoTable = love.filesystem.getInfo("music/"..file)
-        print(infoTable.type)
-        if infoTable.type == "directory" then
-            music[#music+1] = file
-        end
-        for i, format in ipairs(formats) do
-            if file:endswith(format) then
-                music[#music+1] = file
-            end
-        end
-    end
-    files = nil
-    if #music == 0 then
-        print("empty ahh")
-        IsEmptyFolder = true
-    end
-    highlightedfile = 1
+    appendDir = ""
+    readList()
     highlightedopt = 1
     IsPlaying = false
-    appendDir = ""
     queue = {}
     queueMode = false
     navigation = {1,1}
@@ -93,27 +92,7 @@ function love.keypressed(key, code, isrepeat)
         queueMode = false
         settingsOpen = false
         appendDir = ""
-        files = love.filesystem.getDirectoryItems("music/"..appendDir)
-        formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
-        music = {}
-        if appendDir ~= "" then
-            music[#music+1] = ".."
-        end
-        for k, file in ipairs(files) do
-            print(k .. ". " .. file) --outputs something like "1. main.lua"
-            infoTable = love.filesystem.getInfo("music/"..appendDir..file)
-            print(infoTable.type)
-            if infoTable.type == "directory" then
-                music[#music+1] = file
-            end
-            for i, format in ipairs(formats) do
-                if file:endswith(format) then
-                    music[#music+1] = file
-                end
-            end
-        end
-        highlightedfile = 1
-        files = nil
+        readList()
     end
     if not (IsEmptyFolder or IsPlaying) then
         if key == "up" and not isrepeat and highlightedfile-1>=0 then
@@ -181,54 +160,14 @@ function love.keypressed(key, code, isrepeat)
                             print(appendDir)
                         end
                         print(appendDir)
-                        files = love.filesystem.getDirectoryItems("music/"..appendDir)
-                        formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
-                        music = {}
-                        if appendDir ~= "" then
-                            music[#music+1] = ".."
-                        end
-                        for k, file in ipairs(files) do
-                            print(k .. ". " .. file) --outputs something like "1. main.lua"
-                            infoTable = love.filesystem.getInfo("music/"..appendDir..file)
-                            print(infoTable.type)
-                            if infoTable.type == "directory" then
-                                music[#music+1] = file
-                            end
-                            for i, format in ipairs(formats) do
-                                if file:endswith(format) then
-                                    music[#music+1] = file
-                                end
-                            end
-                        end
-                        highlightedfile = 1
-                        files = nil
+                        readList()
                     elseif love.filesystem.getInfo("music/"..appendDir..music[highlightedfile]).type == "directory" then
                         if appendDir ~= "" then
                             appendDir = appendDir..music[highlightedfile].."/"
                         else
                             appendDir = music[highlightedfile].."/"
                         end
-                        files = love.filesystem.getDirectoryItems("music/"..appendDir)
-                        formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
-                        music = {}
-                        if appendDir ~= "" then
-                            music[#music+1] = ".."
-                        end
-                        for k, file in ipairs(files) do
-                            print(k .. ". queue[#queue] = nil" .. file) --outputs something like "1. main.lua"
-                            infoTable = love.filesystem.getInfo("music/"..appendDir..file)
-                            print(infoTable.type)
-                            if infoTable.type == "directory" then
-                                music[#music+1] = file
-                            end
-                            for i, format in ipairs(formats) do
-                                if file:endswith(format) then
-                                    music[#music+1] = file
-                                end
-                            end
-                        end
-                        highlightedfile = 1
-                        files = nil
+                        readList()
                     else
                         queue[#queue+1] = appendDir..music[highlightedfile]
                         if love.filesystem.getInfo("music/"..queue[#queue]..".png") then
