@@ -352,7 +352,11 @@ function love.draw()
                             love.graphics.setColor(0,0,0)
                         end
                         --print(k .. ". " .. file) --outputs something like "1. main.lua"
-                        love.graphics.printf(file, -480, (((k-koffset)-1)*20)+12, 640, "center", 0, 2)
+                        if string.find(string.reverse(file), "/") then
+                        love.graphics.printf(string.sub(file,2+string.len(file)-string.find(string.reverse(file), "/"),string.len(file)), -480, (((k-koffset)-1)*20)+12, 640, "center", 0, 2)
+                        else
+                        love.graphics.printf(string.sub(file,0,string.len(file)), -480, (((k-koffset)-1)*20)+12, 640, "center", 0, 2)
+                        end
                     end
                     ::skip_render_queuemode::
                 end
