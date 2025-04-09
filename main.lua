@@ -9,7 +9,6 @@ function fileExtension(path)
 end
 
 function loadSongIcon(loc)
-    musicArt = art --so if no image is found it will default to the other one
     if loc == nil then
         error("no location provided for image")
     end
@@ -19,6 +18,7 @@ function loadSongIcon(loc)
             return love.graphics.newImage("music/"..loc..formats[i])
         end
     end
+    return art
 end
 
 function readList()
@@ -199,6 +199,24 @@ function love.keypressed(key, code, isrepeat)
             end
         end
     elseif not IsEmptyFolder then
+        if key == "space" then
+                    if isPaused then
+                        audioSource:play()
+                        isPaused = false
+                    else
+                        isPaused = true
+                        audioSource:pause()
+                    end
+        end
+        if key == "j" then
+            audioSource:seek(math.whole(audioSource:tell("seconds")-10))
+        end
+        if key == "k" then
+            audioSource:seek(math.whole(audioSource:tell("seconds")+10))
+        end
+        if tonumber(key) ~= nil then
+            audioSource:seek(math.whole((audioSource:getDuration("seconds")/10)*(tonumber(key))))
+        end
         if key == "up" and not isrepeat and navigation[1]-1~=0 then
             navigation[1] = navigation[1] - 1
         elseif key == "down" and not isrepeat and navigation[1]+1 <= 2 then
@@ -230,6 +248,8 @@ function love.keypressed(key, code, isrepeat)
                 elseif navigation[2]==2 then
                     IsPlaying = false
                     audioSource:stop()
+                    audioSource:release()
+                    collectgarbage("collect") --please stop eating all the ram. stop munching on it like a little snack. i beg.
                 elseif navigation[2]==3 then
                     audioSource:stop()
                 end
@@ -243,7 +263,7 @@ function love.keypressed(key, code, isrepeat)
     end
     if not isrepeat and key == "f4" then
         if love.keyboard.isDown("lalt") then
-            love.event.quit()
+            love.event.quit() --for most OSes this is redundant BUT i had to run this on raspberry pi once and alt+f4 did NOT work
         end
     end
 end
@@ -260,6 +280,7 @@ end
 function love.update(dt)
     if IsPlaying and not audioSource:isPlaying() and not isPaused then
         audioSource:release()
+        collectgarbage("collect") --please stop eating all the ram. stop munching on it like a little snack. i beg.
         print(queue[#queue])
         if #queue > 0 then
                 table.remove(queue, #queue)
