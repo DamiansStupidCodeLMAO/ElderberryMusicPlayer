@@ -56,6 +56,8 @@ function love.load()
     skip = love.graphics.newQuad(81,18,62,18,143,36)
     appendDir = ""
     readList()
+    IsEmptyFolder = (music[1]==nil)
+    print(IsEmptyFolder)
     highlightedopt = 1
     IsPlaying = false
     queue = {}
@@ -64,10 +66,13 @@ function love.load()
     isPaused = false
     settingsOpen = false
     settingsTable = {"Use Integer Scaling: "}
-    settingsTableRaw = TSerial.unpack(love.filesystem.read("settings")) or {true}
     if love.filesystem.getInfo("settings") == nil then
+        settingsTableRaw = {true}
         love.filesystem.write("settings", TSerial.pack(settingsTableRaw))
+    else
+        settingsTableRaw = TSerial.unpack(love.filesystem.read("settings"))
     end
+
     if settingsTableRaw[1] then
         push.setupScreen(320, 240, {upscale = "pixel-perfect"})
     else
