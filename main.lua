@@ -8,6 +8,19 @@ function fileExtension(path)
     return (lastdotpos)
 end
 
+function loadSongIcon(loc)
+    musicArt = art --so if no image is found it will default to the other one
+    if loc == nil then
+        error("no location provided for image")
+    end
+    formats = {".jpg",".jpeg",".png",".bmp",".tga",".hdr",".pic",".exr"}
+    for i=1, #formats do
+        if love.filesystem.getInfo("music/"..loc..formats[i]) ~= nil then
+            return love.graphics.newImage("music/"..loc..formats[i])
+        end
+    end
+end
+
 function readList()
 files = love.filesystem.getDirectoryItems("music/"..appendDir)
     formats = {".wav", ".mp3", ".ogg", ".oga", ".ogv", ".699", ".amf", ".ams", ".dbm", ".dmf", ".dsm", ".far", ".it", ".j2b", ".mdl", ".med", ".mod", ".mt2", ".mtm", ".okt", ".psm", ".s3m", ".stm", ".ult", ".umx", ".xm", ".abc", ".mid", ".pat", ".flac"}
@@ -175,11 +188,7 @@ function love.keypressed(key, code, isrepeat)
                         readList()
                     else
                         queue[#queue+1] = appendDir..music[highlightedfile]
-                        if love.filesystem.getInfo("music/"..queue[#queue]..".png") then
-                            musicArt = love.graphics.newImage("music/"..queue[#queue]..".png")
-                        else
-                            musicArt = art
-                        end
+                        musicArt = loadSongIcon(queue[#queue])
                         -- data, err = love.filesystem.newFileData("music/"..appendDir..music[highlightedfile])) old method of getting data.
                         print(err)
                         audioSource = love.audio.newSource(love.sound.newSoundData("music/"..queue[#queue]), "stream")
@@ -257,11 +266,7 @@ function love.update(dt)
                 if #queue <= 0 then
                     IsPlaying = false
                 else
-                    if love.filesystem.getInfo("music/"..queue[#queue]..".png") then
-                        musicArt = love.graphics.newImage("music/"..queue[#queue]..".png")
-                    else
-                        musicArt = art
-                    end
+                    musicArt = loadSongIcon(queue[#queue])
                     -- data, err = love.filesystem.newFileData("music/"..appendDir..music[highlightedfile])) old method of getting data.
                     print(err)
                     audioSource = love.audio.newSource(love.sound.newSoundData("music/"..queue[#queue]), "stream")
