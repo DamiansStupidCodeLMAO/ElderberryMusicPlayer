@@ -12,8 +12,12 @@ You can also add custom album art to any song by making a file called `/path/to/
 ![Song with album art](https://github.com/user-attachments/assets/148e715b-13b0-47ac-8c94-c9e3ec71e240)
 ### The Queue
 You can also queue songs to play in Elderberry Music Player. To do this, hit the ≡ button to send it to queue. As of 0.2, to view and edit the queue, hit the ≡ button in the top right. (As of right now, editing the queue only allows for deleting songs. I may make them rearrangeable in the next update!)
+<br>![Queue with deletable entries, as seen in EMP 0.2](https://github.com/user-attachments/assets/9508ec1a-c03e-434e-bb6d-d01cecd15ddb)
+
 ### Settings
 Elderberry Music Player also has settings you can access! To change settings, open the cog menu in the top right. **As of 0.2, this only allows for toggling Pixel-Perfect scaling.**
+<br>![EMP 0.2 settings menu.](https://github.com/user-attachments/assets/9cf307d1-1255-4b9a-86ec-30a82f391967)
+
 ### Keyboard Input
 | Keyboard | Function                             |
 |----------|--------------------------------------|
