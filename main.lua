@@ -395,6 +395,9 @@ function love.draw()
             else
                 for k, file in ipairs(music) do
                     koffset = math.whole(highlightedfile-5)
+                    if highlightedfile > 5 and highlightedfile >= k+5 then
+                        goto skip_render_music
+                    else
                     if k == highlightedfile then
                     love.graphics.setColor(0,0,1)
                     love.graphics.rectangle("fill", 0,(((k-koffset)-1)*20)+10,320,18)
@@ -416,6 +419,9 @@ function love.draw()
                     end
                     --print(k .. ". " .. file) --outputs something like "1. main.lua"
                     love.graphics.printf(file, -480, (((k-koffset)-1)*20)+12, 640, "center", 0, 2)
+                end
+
+                ::skip_render_music::
                 end
             end
         else
